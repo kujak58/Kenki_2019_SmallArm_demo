@@ -371,13 +371,13 @@ namespace Kenki_2019_SmallArm_demo
 
             SyncWriteData(id, 0x0074, param);
         }
-        private void Servo_SyncMove(byte[] id,ushort[] pos,ushort time_ms)
+        private void Servo_SyncMove(byte[] id, ushort[] pos, ushort time_ms)
         {
             int inst_len = 4 + 4; // Profile Velocity(112) + Goal Position (116)
 
             int param_num = id.Length * inst_len;
             byte[] param = new byte[param_num];
-            label6.Text += "\r\n"+param_num.ToString()+"\r\n";
+            //label6.Text += "\r\n"+param_num.ToString()+"\r\n";
 
             for (int k = 0; k < id.Length; k++)
             {
@@ -403,7 +403,27 @@ namespace Kenki_2019_SmallArm_demo
 
             SyncWriteData(id, 0x0070, param);
         }
+        private void Servo_ALLTorqueOnOff(byte[] id, int on)
+        {
+            int inst_len = 1; // Torque
 
+            int param_num = id.Length * inst_len;
+            byte[] param = new byte[param_num];
+
+            for (int k = 0; k < id.Length; k++)
+            {
+                int j = id[k] - 1;
+                // Profile Velocity (112)
+                param[(inst_len * k)] = (byte)(on & 0x0001); // 
+            }
+
+            for (int k = 0; k < param_num; k++)
+            {
+                label6.Text += (param[k].ToString("X2"));
+            }
+
+            SyncWriteData(id, 0x0040, param);
+        }
 
 
 
@@ -462,7 +482,7 @@ namespace Kenki_2019_SmallArm_demo
 
         private void Open_button_Click(object sender, EventArgs e)
         {
-            string portName = "COM10";
+            string portName = "COM11";
             serialPort1.BaudRate = 115200;
             serialPort1.PortName = portName;
             //serialPort1.NewLine = "\r\n";
@@ -523,6 +543,10 @@ namespace Kenki_2019_SmallArm_demo
             //Servo_LEDOnOff(3, true);
             Servo_DriveMode_Timebased(3);
             Task.Delay(50);
+            Servo_DriveMode_Timebased(4);
+            Task.Delay(50);
+            Servo_DriveMode_Timebased(5);
+            Task.Delay(50);
         }
         
         private void TrackBar1_Scroll(object sender, EventArgs e)
@@ -577,7 +601,7 @@ namespace Kenki_2019_SmallArm_demo
         {
             byte[] id = { 1, 2, 3 };
             ushort[] pos = new ushort[3];
-            pos[0] = Servo_deg2val(Int32.Parse(ID1_textBox.Text));
+            pos[0] = Servo_deg2val(Int32.Parse(ID1_textBox.Text)); //360 ->4096
             pos[1] = Servo_deg2val(Int32.Parse(ID2_textBox.Text));
             pos[2] = Servo_deg2val(Int32.Parse(ID3_textBox.Text));
             Servo_SyncMove(id, pos, 500);
@@ -630,12 +654,24 @@ namespace Kenki_2019_SmallArm_demo
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Servo_TorqueOnOff(1, true);
+            byte[] id = { 1, 2, 3, 4, 5 };
+            if(button2.Text == "Torque : Off")
+            {
+                Servo_ALLTorqueOnOff(id, 0x01);
+                button2.Text = "Torque : On";
+            }
+            else
+            {
+                Servo_ALLTorqueOnOff(id, 0x00);
+                button2.Text = "Torque : Off";
+            }
+                  
+            /*Servo_TorqueOnOff(1, true);
             Task.Delay(50);
             Servo_TorqueOnOff(2, true);
             Task.Delay(50);
             Servo_TorqueOnOff(3, true);
-
+            */
         }
 
         private void button3_Click(object sender, EventArgs e)
